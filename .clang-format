@@ -8,4 +8,6 @@ FixNamespaceComments: false
 MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: false
 AllowShortFunctionsOnASingleLine: Empty
+BreakBeforeBraces: Allman
 ColumnLimit: 120
+SortIncludes: Never

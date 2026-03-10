@@ -1,11 +1,13 @@
 #pragma once
 
+#include <gl/GlApi.hpp>
+
 #include <cstddef>
 
-#include "gl/GlApi.hpp"
-
-namespace gl {
-    class RectangleMesh {
+namespace gl
+{
+    class RectangleMesh
+    {
     public:
         RectangleMesh() = default;
         ~RectangleMesh();

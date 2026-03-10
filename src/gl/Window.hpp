@@ -1,11 +1,13 @@
 #pragma once
 
+#include <gl/GlApi.hpp>
+
 #include <string_view>
 
-#include "gl/GlApi.hpp"
-
-namespace gl {
-    class Window {
+namespace gl
+{
+    class Window
+    {
     public:
         Window() = default;
         ~Window();

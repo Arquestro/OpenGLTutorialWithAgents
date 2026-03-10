@@ -1,7 +1,9 @@
 #pragma once
 
-namespace gl {
-    class GlfwContext {
+namespace gl
+{
+    class GlfwContext
+    {
     public:
         GlfwContext() = default;
         ~GlfwContext();

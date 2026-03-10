@@ -1,14 +1,17 @@
-#include "gl/Shader.hpp"
+#include <gl/Shader.hpp>
 
 #include <cassert>
 #include <iostream>
 #include <string>
 
-namespace {
-    bool CheckShaderCompilation(GLuint shader, const char *shader_name) {
+namespace
+{
+    bool CheckShaderCompilation(GLuint shader, const char *shader_name)
+    {
         GLint is_compiled = GL_FALSE;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &is_compiled);
-        if (is_compiled == GL_TRUE) {
+        if (is_compiled == GL_TRUE)
+        {
             return true;
         }
         GLint log_length = 0;
@@ -19,10 +22,12 @@ namespace {
         return false;
     }
 
-    bool CheckProgramLink(GLuint program) {
+    bool CheckProgramLink(GLuint program)
+    {
         GLint is_linked = GL_FALSE;
         glGetProgramiv(program, GL_LINK_STATUS, &is_linked);
-        if (is_linked == GL_TRUE) {
+        if (is_linked == GL_TRUE)
+        {
             return true;
         }
         GLint log_length = 0;
@@ -34,19 +39,23 @@ namespace {
     }
 }
 
-namespace gl {
-    bool Shader::CreateAndCompile(GLenum type, const char *source, const char *shader_name) {
+namespace gl
+{
+    bool Shader::CreateAndCompile(GLenum type, const char *source, const char *shader_name)
+    {
         assert(source != nullptr);
         assert(shader_name != nullptr);
         assert(HANDLE == 0);
         HANDLE = glCreateShader(type);
-        if (HANDLE == 0) {
+        if (HANDLE == 0)
+        {
             std::cerr << "Failed to create shader object.\n";
             return false;
         }
         glShaderSource(HANDLE, 1, &source, nullptr);
         glCompileShader(HANDLE);
-        if (!CheckShaderCompilation(HANDLE, shader_name)) {
+        if (!CheckShaderCompilation(HANDLE, shader_name))
+        {
             glDeleteShader(HANDLE);
             HANDLE = 0;
             return false;
@@ -54,23 +63,29 @@ namespace gl {
         return true;
     }
 
-    Shader::~Shader() {
-        if (HANDLE == 0) {
+    Shader::~Shader()
+    {
+        if (HANDLE == 0)
+        {
             return;
         }
         glDeleteShader(HANDLE);
     }
 
-    Shader::Shader(Shader &&other) noexcept {
+    Shader::Shader(Shader &&other) noexcept
+    {
         HANDLE = other.HANDLE;
         other.HANDLE = 0;
     }
 
-    Shader &Shader::operator=(Shader &&other) noexcept {
-        if (this == &other) {
+    Shader &Shader::operator=(Shader &&other) noexcept
+    {
+        if (this == &other)
+        {
             return *this;
         }
-        if (HANDLE != 0) {
+        if (HANDLE != 0)
+        {
             glDeleteShader(HANDLE);
         }
         HANDLE = other.HANDLE;
@@ -78,21 +93,25 @@ namespace gl {
         return *this;
     }
 
-    GLuint Shader::GetHandle() const {
+    GLuint Shader::GetHandle() const
+    {
         return HANDLE;
     }
 
-    bool ShaderProgram::Create() {
+    bool ShaderProgram::Create()
+    {
         assert(HANDLE == 0);
         HANDLE = glCreateProgram();
-        if (HANDLE == 0) {
+        if (HANDLE == 0)
+        {
             std::cerr << "Failed to create shader program object.\n";
             return false;
         }
         return true;
     }
 
-    bool ShaderProgram::Link(const Shader &vertex_shader, const Shader &fragment_shader) {
+    bool ShaderProgram::Link(const Shader &vertex_shader, const Shader &fragment_shader)
+    {
         assert(HANDLE != 0);
         assert(vertex_shader.GetHandle() != 0);
         assert(fragment_shader.GetHandle() != 0);
@@ -102,28 +121,35 @@ namespace gl {
         return CheckProgramLink(HANDLE);
     }
 
-    void ShaderProgram::Use() const {
+    void ShaderProgram::Use() const
+    {
         assert(HANDLE != 0);
         glUseProgram(HANDLE);
     }
 
-    ShaderProgram::~ShaderProgram() {
-        if (HANDLE == 0) {
+    ShaderProgram::~ShaderProgram()
+    {
+        if (HANDLE == 0)
+        {
             return;
         }
         glDeleteProgram(HANDLE);
     }
 
-    ShaderProgram::ShaderProgram(ShaderProgram &&other) noexcept {
+    ShaderProgram::ShaderProgram(ShaderProgram &&other) noexcept
+    {
         HANDLE = other.HANDLE;
         other.HANDLE = 0;
     }
 
-    ShaderProgram &ShaderProgram::operator=(ShaderProgram &&other) noexcept {
-        if (this == &other) {
+    ShaderProgram &ShaderProgram::operator=(ShaderProgram &&other) noexcept
+    {
+        if (this == &other)
+        {
             return *this;
         }
-        if (HANDLE != 0) {
+        if (HANDLE != 0)
+        {
             glDeleteProgram(HANDLE);
         }
         HANDLE = other.HANDLE;
@@ -131,7 +157,8 @@ namespace gl {
         return *this;
     }
 
-    GLuint ShaderProgram::GetHandle() const {
+    GLuint ShaderProgram::GetHandle() const
+    {
         return HANDLE;
     }
 }

@@ -1,9 +1,11 @@
 #pragma once
 
-#include "gl/GlApi.hpp"
+#include <gl/GlApi.hpp>
 
-namespace gl {
-    class ScopedPolygonMode {
+namespace gl
+{
+    class ScopedPolygonMode
+    {
     public:
         explicit ScopedPolygonMode(GLenum mode);
         ~ScopedPolygonMode();

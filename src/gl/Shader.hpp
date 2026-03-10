@@ -1,9 +1,11 @@
 #pragma once
 
-#include "gl/GlApi.hpp"
+#include <gl/GlApi.hpp>
 
-namespace gl {
-    class Shader {
+namespace gl
+{
+    class Shader
+    {
     public:
         Shader() = default;
         ~Shader();
@@ -18,7 +20,8 @@ namespace gl {
         GLuint HANDLE = 0;
     };
 
-    class ShaderProgram {
+    class ShaderProgram
+    {
     public:
         ShaderProgram() = default;
         ~ShaderProgram();

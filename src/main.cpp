@@ -1,14 +1,15 @@
+#include <gl/GlApi.hpp>
+#include <gl/GlfwContext.hpp>
+#include <gl/RectangleMesh.hpp>
+#include <gl/ScopedPolygonMode.hpp>
+#include <gl/Shader.hpp>
+#include <gl/Window.hpp>
+
 #include <cassert>
 #include <iostream>
 
-#include "gl/GlApi.hpp"
-#include "gl/GlfwContext.hpp"
-#include "gl/RectangleMesh.hpp"
-#include "gl/ScopedPolygonMode.hpp"
-#include "gl/Shader.hpp"
-#include "gl/Window.hpp"
-
-namespace {
+namespace
+{
     constexpr int WINDOW_WIDTH = 800;
     constexpr int WINDOW_HEIGHT = 600;
     constexpr const char *WINDOW_TITLE = "GLFW Starter";
@@ -39,35 +40,43 @@ void main() {
 }
 )";
 
-    void GlfwErrorCallback(int error, const char *description) {
+    void GlfwErrorCallback(int error, const char *description)
+    {
         std::cerr << "GLFW Error (" << error << "): " << description << '\n';
     }
 
     bool ConfigureGraphics(gl::Window &window, gl::ShaderProgram &program, gl::RectangleMesh &filled_rectangle,
-                           gl::RectangleMesh &wireframe_rectangle) {
+                           gl::RectangleMesh &wireframe_rectangle)
+    {
         window.MakeContextCurrent();
         window.SetDefaultFramebufferCallback();
         window.SetViewportFromFramebuffer();
         if (!filled_rectangle.Create(FILLED_RECTANGLE_VERTICES,
-                                     sizeof(FILLED_RECTANGLE_VERTICES) / sizeof(FILLED_RECTANGLE_VERTICES[0]))) {
+                                     sizeof(FILLED_RECTANGLE_VERTICES) / sizeof(FILLED_RECTANGLE_VERTICES[0])))
+        {
             return false;
         }
-        if (!wireframe_rectangle.Create(WIREFRAME_RECTANGLE_VERTICES, sizeof(WIREFRAME_RECTANGLE_VERTICES) /
-                                                                          sizeof(WIREFRAME_RECTANGLE_VERTICES[0]))) {
+        if (!wireframe_rectangle.Create(WIREFRAME_RECTANGLE_VERTICES,
+                                        sizeof(WIREFRAME_RECTANGLE_VERTICES) / sizeof(WIREFRAME_RECTANGLE_VERTICES[0])))
+        {
             return false;
         }
         gl::Shader vertex_shader;
         gl::Shader fragment_shader;
-        if (!vertex_shader.CreateAndCompile(GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE, "Vertex shader")) {
+        if (!vertex_shader.CreateAndCompile(GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE, "Vertex shader"))
+        {
             return false;
         }
-        if (!fragment_shader.CreateAndCompile(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE, "Fragment shader")) {
+        if (!fragment_shader.CreateAndCompile(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE, "Fragment shader"))
+        {
             return false;
         }
-        if (!program.Create()) {
+        if (!program.Create())
+        {
             return false;
         }
-        if (!program.Link(vertex_shader, fragment_shader)) {
+        if (!program.Link(vertex_shader, fragment_shader))
+        {
             return false;
         }
         window.SetSwapInterval(1);
@@ -75,7 +84,8 @@ void main() {
     }
 
     void RenderFrame(const gl::ShaderProgram &program, const gl::RectangleMesh &filled_rectangle,
-                     const gl::RectangleMesh &wireframe_rectangle) {
+                     const gl::RectangleMesh &wireframe_rectangle)
+    {
         glClearColor(CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
         glClear(GL_COLOR_BUFFER_BIT);
         program.Use();
@@ -90,10 +100,12 @@ void main() {
     }
 }
 
-int main() {
+int main()
+{
     glfwSetErrorCallback(GlfwErrorCallback);
     gl::GlfwContext glfw_context;
-    if (!glfw_context.Initialize()) {
+    if (!glfw_context.Initialize())
+    {
         return 1;
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -103,17 +115,20 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #endif
     gl::Window window;
-    if (!window.Create(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)) {
+    if (!window.Create(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE))
+    {
         return 1;
     }
     assert(window.GetNativeHandle() != nullptr);
     gl::ShaderProgram shader_program;
     gl::RectangleMesh filled_rectangle;
     gl::RectangleMesh wireframe_rectangle;
-    if (!ConfigureGraphics(window, shader_program, filled_rectangle, wireframe_rectangle)) {
+    if (!ConfigureGraphics(window, shader_program, filled_rectangle, wireframe_rectangle))
+    {
         return 1;
     }
-    while (!window.ShouldClose()) {
+    while (!window.ShouldClose())
+    {
         RenderFrame(shader_program, filled_rectangle, wireframe_rectangle);
         window.SwapBuffers();
         window.PollEvents();
