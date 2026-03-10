@@ -1,7 +1,8 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 TabWidth: 4
-UseTab: ForIndentation
+UseTab: Never
+AccessModifierOffset: -4
 NamespaceIndentation: All
 FixNamespaceComments: false
 MaxEmptyLinesToKeep: 1

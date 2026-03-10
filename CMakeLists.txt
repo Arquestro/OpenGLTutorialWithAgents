@@ -10,6 +10,13 @@ find_package(OpenGL REQUIRED)
 
 add_executable(glfw_starter
     src/main.cpp
+    src/gl/GlfwContext.cpp
+    src/gl/Window.cpp
+    src/gl/Shader.cpp
+    src/gl/RectangleMesh.cpp
+    src/gl/ScopedPolygonMode.cpp
 )
+
+target_include_directories(glfw_starter PRIVATE src)
 
 target_link_libraries(glfw_starter PRIVATE glfw OpenGL::GL)
