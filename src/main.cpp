@@ -19,19 +19,19 @@ namespace {
 	constexpr float CLEAR_COLOR_G = 0.12f;
 	constexpr float CLEAR_COLOR_B = 0.18f;
 	constexpr float CLEAR_COLOR_A = 1.0f;
-	constexpr float TRIANGLE_POSITIONS[] = {-0.8f, -0.8f, 0.8f, -0.8f, 0.0f, 0.8f};
+	constexpr float FILLED_RECTANGLE_VERTICES[] = {-0.95f, -0.65f, 1.0f, 0.0f, 0.0f, -0.15f, -0.65f, 0.0f, 1.0f, 0.0f,
+	                                               -0.15f, 0.65f,  0.0f, 0.0f, 1.0f, -0.95f, -0.65f, 1.0f, 0.0f, 0.0f,
+	                                               -0.15f, 0.65f,  0.0f, 0.0f, 1.0f, -0.95f, 0.65f,  1.0f, 1.0f, 0.0f};
+	constexpr float WIREFRAME_RECTANGLE_VERTICES[] = {0.15f, -0.65f, 1.0f, 0.0f, 0.0f, 0.95f, -0.65f, 0.0f, 1.0f, 0.0f,
+	                                                  0.95f, 0.65f,  0.0f, 0.0f, 1.0f, 0.15f, -0.65f, 1.0f, 0.0f, 0.0f,
+	                                                  0.95f, 0.65f,  0.0f, 0.0f, 1.0f, 0.15f, 0.65f,  1.0f, 1.0f, 0.0f};
 	constexpr const char *VERTEX_SHADER_SOURCE = R"(#version 330 core
 layout (location = 0) in vec2 a_position;
+layout (location = 1) in vec3 a_color;
 out vec3 v_color;
 void main() {
 	gl_Position = vec4(a_position, 0.0, 1.0);
-	if (gl_VertexID == 0) {
-		v_color = vec3(1.0, 0.0, 0.0);
-	} else if (gl_VertexID == 1) {
-		v_color = vec3(0.0, 1.0, 0.0);
-	} else {
-		v_color = vec3(0.0, 0.0, 1.0);
-	}
+	v_color = a_color;
 }
 )";
 	constexpr const char *FRAGMENT_SHADER_SOURCE = R"(#version 330 core
@@ -79,20 +79,28 @@ void main() {
 		return false;
 	}
 
-	void CleanupGlResources(GLuint program, GLuint vertex_buffer, GLuint vertex_array) {
+	void CleanupGlResources(GLuint program, GLuint vertex_buffer_a, GLuint vertex_buffer_b, GLuint vertex_array_a,
+	                        GLuint vertex_array_b) {
 		if (program != 0) {
 			glDeleteProgram(program);
 		}
-		if (vertex_buffer != 0) {
-			glDeleteBuffers(1, &vertex_buffer);
+		if (vertex_buffer_a != 0) {
+			glDeleteBuffers(1, &vertex_buffer_a);
 		}
-		if (vertex_array != 0) {
-			glDeleteVertexArrays(1, &vertex_array);
+		if (vertex_buffer_b != 0) {
+			glDeleteBuffers(1, &vertex_buffer_b);
+		}
+		if (vertex_array_a != 0) {
+			glDeleteVertexArrays(1, &vertex_array_a);
+		}
+		if (vertex_array_b != 0) {
+			glDeleteVertexArrays(1, &vertex_array_b);
 		}
 	}
 
-	int CleanupAndExit(GLFWwindow *window, GLuint program, GLuint vertex_buffer, GLuint vertex_array, int exit_code) {
-		CleanupGlResources(program, vertex_buffer, vertex_array);
+	int CleanupAndExit(GLFWwindow *window, GLuint program, GLuint vertex_buffer_a, GLuint vertex_buffer_b,
+	                   GLuint vertex_array_a, GLuint vertex_array_b, int exit_code) {
+		CleanupGlResources(program, vertex_buffer_a, vertex_buffer_b, vertex_array_a, vertex_array_b);
 		if (window != nullptr) {
 			glfwDestroyWindow(window);
 		}
@@ -125,24 +133,38 @@ int main() {
 	int framebuffer_height = 0;
 	glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
 	glViewport(0, 0, framebuffer_width, framebuffer_height);
-	GLuint vertex_array = 0;
-	GLuint vertex_buffer = 0;
+	GLuint filled_vertex_array = 0;
+	GLuint filled_vertex_buffer = 0;
+	GLuint wireframe_vertex_array = 0;
+	GLuint wireframe_vertex_buffer = 0;
 	GLuint vertex_shader = 0;
 	GLuint fragment_shader = 0;
 	GLuint shader_program = 0;
-	glGenVertexArrays(1, &vertex_array);
-	glBindVertexArray(vertex_array);
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(TRIANGLE_POSITIONS), TRIANGLE_POSITIONS, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+	glGenVertexArrays(1, &filled_vertex_array);
+	glBindVertexArray(filled_vertex_array);
+	glGenBuffers(1, &filled_vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, filled_vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(FILLED_RECTANGLE_VERTICES), FILLED_RECTANGLE_VERTICES, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glGenVertexArrays(1, &wireframe_vertex_array);
+	glBindVertexArray(wireframe_vertex_array);
+	glGenBuffers(1, &wireframe_vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, wireframe_vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(WIREFRAME_RECTANGLE_VERTICES), WIREFRAME_RECTANGLE_VERTICES, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), nullptr);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), reinterpret_cast<void *>(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &VERTEX_SHADER_SOURCE, nullptr);
 	glCompileShader(vertex_shader);
 	if (!CheckShaderCompilation(vertex_shader, "Vertex shader")) {
 		glDeleteShader(vertex_shader);
-		return CleanupAndExit(window, 0, vertex_buffer, vertex_array, 1);
+		return CleanupAndExit(window, 0, filled_vertex_buffer, wireframe_vertex_buffer, filled_vertex_array,
+		                      wireframe_vertex_array, 1);
 	}
 	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment_shader, 1, &FRAGMENT_SHADER_SOURCE, nullptr);
@@ -150,7 +172,8 @@ int main() {
 	if (!CheckShaderCompilation(fragment_shader, "Fragment shader")) {
 		glDeleteShader(fragment_shader);
 		glDeleteShader(vertex_shader);
-		return CleanupAndExit(window, 0, vertex_buffer, vertex_array, 1);
+		return CleanupAndExit(window, 0, filled_vertex_buffer, wireframe_vertex_buffer, filled_vertex_array,
+		                      wireframe_vertex_array, 1);
 	}
 	shader_program = glCreateProgram();
 	glAttachShader(shader_program, vertex_shader);
@@ -159,7 +182,8 @@ int main() {
 	if (!CheckProgramLink(shader_program)) {
 		glDeleteShader(fragment_shader);
 		glDeleteShader(vertex_shader);
-		return CleanupAndExit(window, shader_program, vertex_buffer, vertex_array, 1);
+		return CleanupAndExit(window, shader_program, filled_vertex_buffer, wireframe_vertex_buffer,
+		                      filled_vertex_array, wireframe_vertex_array, 1);
 	}
 	glDeleteShader(vertex_shader);
 	glDeleteShader(fragment_shader);
@@ -168,10 +192,16 @@ int main() {
 		glClearColor(CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(shader_program);
-		glBindVertexArray(vertex_array);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glBindVertexArray(filled_vertex_array);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glBindVertexArray(wireframe_vertex_array);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-	return CleanupAndExit(window, shader_program, vertex_buffer, vertex_array, 0);
+	return CleanupAndExit(window, shader_program, filled_vertex_buffer, wireframe_vertex_buffer, filled_vertex_array,
+	                      wireframe_vertex_array, 0);
 }
