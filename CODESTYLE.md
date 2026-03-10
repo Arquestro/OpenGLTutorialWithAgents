@@ -9,6 +9,7 @@
 - Set the column width to 120 characters.
 - Use integer literals for return codes (`0`, `1`) instead of `EXIT_SUCCESS`/`EXIT_FAILURE`.
 - `constexpr` names must be UPPERCASE with `_`, and must not use a `k` prefix.
+- Function names must use UpperCamelCase and may include digits (for example `ThisIsAFunction912`).
 - Keep formatting consistent by running:
   - `clang-format -i src/main.cpp`
   - or `clang-format -i <changed_cpp_files>`
