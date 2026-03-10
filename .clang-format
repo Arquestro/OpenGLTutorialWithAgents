@@ -3,7 +3,8 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: ForIndentation
 NamespaceIndentation: All
-MaxEmptyLinesToKeep: 0
+FixNamespaceComments: false
+MaxEmptyLinesToKeep: 1
 KeepEmptyLinesAtTheStartOfBlocks: false
 AllowShortFunctionsOnASingleLine: Empty
-ColumnLimit: 100
+ColumnLimit: 120
