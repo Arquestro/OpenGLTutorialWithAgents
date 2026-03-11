@@ -4,9 +4,11 @@
 #include <gl/ScopedPolygonMode.hpp>
 #include <gl/Shader.hpp>
 #include <gl/Window.hpp>
+#include <resources/ShaderSourceLibrary.hpp>
 
 #include <cassert>
 #include <iostream>
+#include <string_view>
 
 namespace
 {
@@ -23,34 +25,13 @@ namespace
     constexpr float WIREFRAME_RECTANGLE_VERTICES[] = {0.15f, -0.65f, 1.0f, 0.0f, 0.0f, 0.95f, -0.65f, 0.0f, 1.0f, 0.0f,
                                                       0.95f, 0.65f,  0.0f, 0.0f, 1.0f, 0.15f, -0.65f, 1.0f, 0.0f, 0.0f,
                                                       0.95f, 0.65f,  0.0f, 0.0f, 1.0f, 0.15f, 0.65f,  1.0f, 1.0f, 0.0f};
-    constexpr const char *VERTEX_SHADER_SOURCE = R"(#version 330 core
-layout (location = 0) in vec2 a_position;
-layout (location = 1) in vec3 a_color;
-out vec3 v_color;
-void main() {
-	gl_Position = vec4(a_position, 0.0, 1.0);
-	v_color = a_color;
-}
-)";
-    constexpr const char *FRAGMENT_SHADER_SOURCE = R"(#version 330 core
-in vec3 v_color;
-out vec4 frag_color;
-uniform float U_TIME_DATA;
-void main() {
-	float time_seconds = U_TIME_DATA;
-	float pulse = 0.5 + 0.5 * sin(time_seconds * 2.0);
-	vec3 animated_color = mix(v_color * 0.35, v_color, pulse);
-	frag_color = vec4(animated_color, 1.0);
-}
-)";
-
     void GlfwErrorCallback(int error, const char *description)
     {
         std::cerr << "GLFW Error (" << error << "): " << description << '\n';
     }
 
     bool ConfigureGraphics(gl::Window &window, gl::ShaderProgram &program, gl::RectangleMesh &filled_rectangle,
-                           gl::RectangleMesh &wireframe_rectangle)
+                           gl::RectangleMesh &wireframe_rectangle, std::string_view shader_directory_path)
     {
         window.MakeContextCurrent();
         window.SetDefaultFramebufferCallback();
@@ -67,11 +48,21 @@ void main() {
         }
         gl::Shader vertex_shader;
         gl::Shader fragment_shader;
-        if (!vertex_shader.CreateAndCompile(GL_VERTEX_SHADER, VERTEX_SHADER_SOURCE, "Vertex shader"))
+        resources::ShaderSourceLibrary shader_source_library(shader_directory_path);
+        resources::ShaderSourcePair shader_source_pair;
+        bool shader_files_loaded = shader_source_library.LoadPairWithFallback(
+            "rectangle.vert", "rectangle.frag", "error.vert", "error.frag", shader_source_pair);
+        if (!shader_files_loaded)
         {
             return false;
         }
-        if (!fragment_shader.CreateAndCompile(GL_FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE, "Fragment shader"))
+        if (!vertex_shader.CreateAndCompile(GL_VERTEX_SHADER, shader_source_pair.VERTEX_SOURCE.c_str(),
+                                            "Vertex shader"))
+        {
+            return false;
+        }
+        if (!fragment_shader.CreateAndCompile(GL_FRAGMENT_SHADER, shader_source_pair.FRAGMENT_SOURCE.c_str(),
+                                              "Fragment shader"))
         {
             return false;
         }
@@ -106,8 +97,13 @@ void main() {
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc < 2)
+    {
+        std::cerr << "Usage: glfw_starter <shader_directory_path>\n";
+        return 1;
+    }
     glfwSetErrorCallback(GlfwErrorCallback);
     gl::GlfwContext glfw_context;
     if (!glfw_context.Initialize())
@@ -129,7 +125,7 @@ int main()
     gl::ShaderProgram shader_program;
     gl::RectangleMesh filled_rectangle;
     gl::RectangleMesh wireframe_rectangle;
-    if (!ConfigureGraphics(window, shader_program, filled_rectangle, wireframe_rectangle))
+    if (!ConfigureGraphics(window, shader_program, filled_rectangle, wireframe_rectangle, argv[1]))
     {
         return 1;
     }

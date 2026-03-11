@@ -15,6 +15,8 @@ add_executable(glfw_starter
     src/gl/Shader.cpp
     src/gl/RectangleMesh.cpp
     src/gl/ScopedPolygonMode.cpp
+    src/io/TextFileLoader.cpp
+    src/resources/ShaderSourceLibrary.cpp
 )
 
 target_include_directories(glfw_starter PRIVATE src)
