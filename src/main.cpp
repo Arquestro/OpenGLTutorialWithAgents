@@ -35,8 +35,12 @@ void main() {
     constexpr const char *FRAGMENT_SHADER_SOURCE = R"(#version 330 core
 in vec3 v_color;
 out vec4 frag_color;
+uniform float U_TIME_DATA;
 void main() {
-	frag_color = vec4(v_color, 1.0);
+	float time_seconds = U_TIME_DATA;
+	float pulse = 0.5 + 0.5 * sin(time_seconds * 2.0);
+	vec3 animated_color = mix(v_color * 0.35, v_color, pulse);
+	frag_color = vec4(animated_color, 1.0);
 }
 )";
 
@@ -83,12 +87,14 @@ void main() {
         return true;
     }
 
-    void RenderFrame(const gl::ShaderProgram &program, const gl::RectangleMesh &filled_rectangle,
+    void RenderFrame(gl::ShaderProgram &program, const gl::RectangleMesh &filled_rectangle,
                      const gl::RectangleMesh &wireframe_rectangle)
     {
         glClearColor(CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
         glClear(GL_COLOR_BUFFER_BIT);
         program.Use();
+        bool time_uniform_set = program.SetUniformFloat("U_TIME_DATA", static_cast<float>(glfwGetTime()));
+        assert(time_uniform_set);
         {
             gl::ScopedPolygonMode scoped_polygon_mode(GL_FILL);
             filled_rectangle.Draw();

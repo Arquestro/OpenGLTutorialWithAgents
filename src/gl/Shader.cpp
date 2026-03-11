@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <utility>
 
 namespace
 {
@@ -36,6 +37,13 @@ namespace
         glGetProgramInfoLog(program, log_length, nullptr, info_log.data());
         std::cerr << "Shader program link failed:\n" << info_log << '\n';
         return false;
+    }
+
+    bool IsProgramCurrentlyBound(GLuint handle)
+    {
+        GLint current_program = 0;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
+        return static_cast<GLuint>(current_program) == handle;
     }
 }
 
@@ -107,6 +115,7 @@ namespace gl
             std::cerr << "Failed to create shader program object.\n";
             return false;
         }
+        UNIFORM_LOCATIONS.clear();
         return true;
     }
 
@@ -118,6 +127,7 @@ namespace gl
         glAttachShader(HANDLE, vertex_shader.GetHandle());
         glAttachShader(HANDLE, fragment_shader.GetHandle());
         glLinkProgram(HANDLE);
+        UNIFORM_LOCATIONS.clear();
         return CheckProgramLink(HANDLE);
     }
 
@@ -125,6 +135,121 @@ namespace gl
     {
         assert(HANDLE != 0);
         glUseProgram(HANDLE);
+    }
+
+    bool ShaderProgram::SetUniformBool(const char *name, bool value)
+    {
+        return SetUniformInt(name, value ? 1 : 0);
+    }
+
+    bool ShaderProgram::SetUniformFloat(const char *name, float value)
+    {
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniform1f(location, value);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformInt(const char *name, int value)
+    {
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniform1i(location, value);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformVec2(const char *name, const float *values)
+    {
+        assert(values != nullptr);
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniform2fv(location, 1, values);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformVec3(const char *name, const float *values)
+    {
+        assert(values != nullptr);
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniform3fv(location, 1, values);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformVec4(const char *name, const float *values)
+    {
+        assert(values != nullptr);
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniform4fv(location, 1, values);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformMat3(const char *name, const float *values, bool transpose)
+    {
+        assert(values != nullptr);
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniformMatrix3fv(location, 1, transpose ? GL_TRUE : GL_FALSE, values);
+        return true;
+    }
+
+    bool ShaderProgram::SetUniformMat4(const char *name, const float *values, bool transpose)
+    {
+        assert(values != nullptr);
+        if (!EnsureProgramIsInUse())
+        {
+            return false;
+        }
+        GLint location = GetUniformLocation(name);
+        if (location < 0)
+        {
+            return false;
+        }
+        glUniformMatrix4fv(location, 1, transpose ? GL_TRUE : GL_FALSE, values);
+        return true;
     }
 
     ShaderProgram::~ShaderProgram()
@@ -139,7 +264,9 @@ namespace gl
     ShaderProgram::ShaderProgram(ShaderProgram &&other) noexcept
     {
         HANDLE = other.HANDLE;
+        UNIFORM_LOCATIONS = std::move(other.UNIFORM_LOCATIONS);
         other.HANDLE = 0;
+        other.UNIFORM_LOCATIONS.clear();
     }
 
     ShaderProgram &ShaderProgram::operator=(ShaderProgram &&other) noexcept
@@ -153,12 +280,46 @@ namespace gl
             glDeleteProgram(HANDLE);
         }
         HANDLE = other.HANDLE;
+        UNIFORM_LOCATIONS = std::move(other.UNIFORM_LOCATIONS);
         other.HANDLE = 0;
+        other.UNIFORM_LOCATIONS.clear();
         return *this;
     }
 
     GLuint ShaderProgram::GetHandle() const
     {
         return HANDLE;
+    }
+
+    bool ShaderProgram::EnsureProgramIsInUse() const
+    {
+        assert(HANDLE != 0);
+        if (HANDLE == 0)
+        {
+            return false;
+        }
+        if (!IsProgramCurrentlyBound(HANDLE))
+        {
+            std::cerr << "ShaderProgram::Use() must be called before setting uniforms.\n";
+            return false;
+        }
+        return true;
+    }
+
+    GLint ShaderProgram::GetUniformLocation(const char *name)
+    {
+        assert(name != nullptr);
+        auto iterator = UNIFORM_LOCATIONS.find(name);
+        if (iterator != UNIFORM_LOCATIONS.end())
+        {
+            return iterator->second;
+        }
+        GLint location = glGetUniformLocation(HANDLE, name);
+        UNIFORM_LOCATIONS[name] = location;
+        if (location < 0)
+        {
+            std::cerr << "Uniform not found or optimized out: " << name << '\n';
+        }
+        return location;
     }
 }
